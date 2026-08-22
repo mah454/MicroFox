@@ -69,7 +69,7 @@ public class HttpProviderImpl implements HttpProvider {
 
     @Override
     public void rest(String name, String category, Class<?> restClass) {
-        RestRouter.registerRoutes(restClass, (path, method, route) -> route(path, method, name, category, route));
+        RestRouter.registerRoutes(restClass, (path, method, route, roles, scopes) -> route(new RouteInfo(path, method, route, roles, scopes, name, category)));
     }
 
     @Override

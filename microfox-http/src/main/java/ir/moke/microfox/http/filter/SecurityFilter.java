@@ -44,11 +44,11 @@ public class SecurityFilter extends SecurityContext implements Filter {
 
             Principal principle = strategy.authenticate(req);
             if (principle == null) {
-                throw new MicroFoxException(StatusCode.UNAUTHORIZED);
+                throw new MicroFoxException(StatusCode.UNAUTHORIZED, "Authentication required. Please log in to continue.");
             }
 
             if (!strategy.authorize(principle, routeInfo.getRoles(), routeInfo.getScopes())) {
-                throw new MicroFoxException(StatusCode.FORBIDDEN);
+                throw new MicroFoxException(StatusCode.FORBIDDEN, "You don't have permission to access this resource.");
             }
 
             // Store into SecurityContext for business layer
