@@ -63,7 +63,7 @@ public class RestRouter {
                 .filter(e -> method.isAnnotationPresent((Class<? extends Annotation>) e.getKey()))
                 .map(Map.Entry::getValue)
                 .findFirst()
-                .orElse(null);
+                .orElse(HttpMethod.GET);
     }
 
     private static Object[] resolveArgs(Method method, Request req, Response response) {
