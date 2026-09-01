@@ -2,6 +2,8 @@ package ir.moke.microfox.http.proxy;
 
 import ir.moke.microfox.api.http.*;
 import ir.moke.microfox.api.http.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class RestRouter {
+    private static final Logger logger = LoggerFactory.getLogger(RestRouter.class);
 
     private static final Map<Class<?>, HttpMethod> HTTP_METHOD_ANNOTATIONS = Map.of(
             GET.class, HttpMethod.GET,
