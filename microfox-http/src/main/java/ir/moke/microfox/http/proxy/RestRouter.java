@@ -32,7 +32,7 @@ public class RestRouter {
 
             String methodPath = Optional.ofNullable(method.getAnnotation(Path.class))
                     .map(Path::value)
-                    .orElse("");
+                    .orElse(null);
 
             List<String> roles = Arrays.stream(Optional.ofNullable(method.getAnnotation(Role.class))
                             .map(Role::value)
@@ -44,7 +44,7 @@ public class RestRouter {
                             .orElse(new String[0]))
                     .toList();
 
-            String fullPath = HttpUtils.normalizePath(basePath) + HttpUtils.normalizePath(methodPath);
+            String fullPath = methodPath == null ? null : HttpUtils.normalizePath(basePath) + HttpUtils.normalizePath(methodPath);
             method.setAccessible(true);
 
             Route route = (req, resp) -> {
@@ -53,7 +53,7 @@ public class RestRouter {
                 if (result != null) resp.body(result); // assumes Response has json()
             };
 
-            consumer.accept(fullPath, httpMethod, route, roles, scopes);
+            if (fullPath != null) consumer.accept(fullPath, httpMethod, route, roles, scopes);
         }
     }
 
