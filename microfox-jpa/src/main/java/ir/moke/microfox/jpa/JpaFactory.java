@@ -70,6 +70,7 @@ public class JpaFactory {
 
     static void unregister(String identity) {
         EntityManagerFactory emf = getEntityManagerFactory(identity);
+        if (emf == null) return;
         emf.unwrap(SessionFactoryImplementor.class).close();
         emf.close();
         MetadataSources metadataSources = METADATA_SOURCES_MAP.remove(identity);
@@ -101,7 +102,7 @@ public class JpaFactory {
     }
 
     static EntityManagerFactory getEntityManagerFactory(String identity) {
-        return CONNECTION_FACTORY_LIST.stream().filter(item -> item.getName().equalsIgnoreCase(identity)).findFirst().orElseThrow(() -> new MicroFoxException("EntityManagerFactory with name %s not registered yet".formatted(identity)));
+        return CONNECTION_FACTORY_LIST.stream().filter(item -> item.getName().equalsIgnoreCase(identity)).findFirst().orElse(null);
     }
 
     static ScopedValue<Map<String, EntityManager>> getScopedValue() {
