@@ -146,4 +146,10 @@ public class MicroFoxEnvironment {
     public static String getEnv(String key) {
         return (String) sortedMap.get(normalizeKey(key));
     }
+
+    public static String getEnvOrElse(String key, String value) {
+        String v = (String) sortedMap.get(normalizeKey(key));
+        if (v == null || v.isEmpty()) return value;
+        return v;
+    }
 }

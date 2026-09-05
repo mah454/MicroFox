@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -108,7 +110,10 @@ public class HttpHelper extends HttpUtils {
     private static void internalServerError(HttpServletResponse resp, Throwable t) {
         logger.error("MicroFox Unknown Error", t);
         resp.setStatus(StatusCode.INTERNAL_SERVER_ERROR.getCode());
-        sendResponse(resp, t.getMessage().getBytes(StandardCharsets.UTF_8));
+        StringWriter writer = new StringWriter();
+        t.printStackTrace(new PrintWriter(writer));
+
+        sendResponse(resp, writer.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private static void fillExtraHeaders(HttpServletResponse resp, Map<String, Object> headers) {
