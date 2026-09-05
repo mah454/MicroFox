@@ -2,7 +2,6 @@ package ir.moke.microfox.jpa;
 
 import ir.moke.microfox.api.jpa.TransactionPolicy;
 import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,53 +20,6 @@ public class Crud extends Jpa {
         Objects.requireNonNull(t, "JPA entity object could not be null");
 
         persistence(identity, TransactionPolicy.REQUIRED, em -> em.merge(t));
-    }
-
-    public static <T> List<T> select(String identity, String hql, Map<String, Object> parameters, Class<T> entityClass, Integer offset, Integer size) {
-        Objects.requireNonNull(identity, "JPA hql could not be null");
-        Objects.requireNonNull(entityClass, "JPA entity class could not be null");
-
-        List<T> result = new ArrayList<>();
-        persistence(identity, TransactionPolicy.NOT_SUPPORTED, em -> {
-            TypedQuery<T> typedQuery = em.createQuery(hql, entityClass);
-            if (parameters != null && !parameters.isEmpty()) parameters.forEach(typedQuery::setParameter);
-            Optional.ofNullable(offset).ifPresent(typedQuery::setFirstResult);
-            Optional.ofNullable(size).ifPresent(typedQuery::setMaxResults);
-            result.addAll(typedQuery.getResultList());
-        });
-
-        return result;
-    }
-
-    public static <T> Long count(String identity, String hql, Map<String, Object> parameters) {
-        Objects.requireNonNull(identity, "JPA hql could not be null");
-
-        AtomicLong countRef = new AtomicLong();
-        persistence(identity, TransactionPolicy.NOT_SUPPORTED, em -> {
-            TypedQuery<Long> typedQuery = em.createQuery(hql, Long.class);
-            if (parameters != null && !parameters.isEmpty()) parameters.forEach(typedQuery::setParameter);
-            Long count = typedQuery.getSingleResult();
-            countRef.set(count);
-        });
-
-        return countRef.get();
-    }
-
-    public static <T> List<T> select(String identity, String hql, Map<String, Object> parameters, Class<T> entityClass) {
-        Objects.requireNonNull(identity, "JPA hql could not be null");
-        Objects.requireNonNull(entityClass, "JPA entity class could not be null");
-
-        return select(identity, hql, parameters, entityClass, null, null);
-    }
-
-    public static <T> T select(String identity, Object primaryKey, Class<T> entityClass) {
-        Objects.requireNonNull(identity, "JPA identity could not be null");
-        Objects.requireNonNull(primaryKey, "JPA primary key could not be null");
-        Objects.requireNonNull(entityClass, "JPA entity class could not be null");
-
-        AtomicReference<T> ref = new AtomicReference<>();
-        persistence(identity, TransactionPolicy.NOT_SUPPORTED, em -> ref.set(em.find(entityClass, primaryKey)));
-        return ref.get();
     }
 
     public static <T> void delete(String identity, Object entity) {
@@ -89,11 +41,59 @@ public class Crud extends Jpa {
         Optional.ofNullable(t).ifPresent(item -> delete(identity, t));
     }
 
-    public static <T> void execute(String identity, String hql,Map<String,Object> parameters) {
+    public static <T> void execute(String identity, String query, Map<String, Object> parameters, boolean isNative) {
         persistence(identity, TransactionPolicy.REQUIRED, em -> {
-            Query query = em.createQuery(hql);
-            parameters.forEach(query::setParameter);
-            query.executeUpdate();
+            Query q = isNative ? em.createNativeQuery(query) : em.createQuery(query);
+            parameters.forEach(q::setParameter);
+            q.executeUpdate();
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> select(String identity, String query, Map<String, Object> parameters, Class<T> entityClass, Integer offset, Integer size, boolean isNative) {
+        Objects.requireNonNull(identity, "JPA query could not be null");
+        Objects.requireNonNull(entityClass, "JPA entity class could not be null");
+
+        List<T> result = new ArrayList<>();
+        persistence(identity, TransactionPolicy.NOT_SUPPORTED, em -> {
+            Query q = isNative ? em.createNativeQuery(query) : em.createQuery(query);
+            if (parameters != null && !parameters.isEmpty()) parameters.forEach(q::setParameter);
+            Optional.ofNullable(offset).ifPresent(q::setFirstResult);
+            Optional.ofNullable(size).ifPresent(q::setMaxResults);
+            result.addAll(q.getResultList());
+        });
+
+        return result;
+    }
+
+    public static <T> Long count(String identity, String query, Map<String, Object> parameters, boolean isNative) {
+        Objects.requireNonNull(identity, "JPA query could not be null");
+
+        AtomicLong countRef = new AtomicLong();
+        persistence(identity, TransactionPolicy.NOT_SUPPORTED, em -> {
+            Query q = isNative ? em.createNativeQuery(query) : em.createQuery(query);
+            if (parameters != null && !parameters.isEmpty()) parameters.forEach(q::setParameter);
+            Long count = (Long) q.getSingleResult();
+            countRef.set(count);
+        });
+
+        return countRef.get();
+    }
+
+    public static <T> List<T> select(String identity, String query, Map<String, Object> parameters, Class<T> entityClass, boolean isNative) {
+        Objects.requireNonNull(identity, "JPA query could not be null");
+        Objects.requireNonNull(entityClass, "JPA entity class could not be null");
+
+        return select(identity, query, parameters, entityClass, null, null, isNative);
+    }
+
+    public static <T> T select(String identity, Object primaryKey, Class<T> entityClass) {
+        Objects.requireNonNull(identity, "JPA identity could not be null");
+        Objects.requireNonNull(primaryKey, "JPA primary key could not be null");
+        Objects.requireNonNull(entityClass, "JPA entity class could not be null");
+
+        AtomicReference<T> ref = new AtomicReference<>();
+        persistence(identity, TransactionPolicy.NOT_SUPPORTED, em -> ref.set(em.find(entityClass, primaryKey)));
+        return ref.get();
     }
 }
